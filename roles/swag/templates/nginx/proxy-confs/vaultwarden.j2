@@ -1,0 +1,51 @@
+server {
+    listen {{ vaultwarden_bvd.port }} ssl http2 ;
+
+    server_name {{ vaultwarden_bvd.domain }}.*;
+
+    access_log /config/log/nginx/vaultwarden_access.log upstream_time;
+
+    include /config/nginx/ssl.conf;
+    client_max_body_size 128M;
+
+    location / {
+        include /config/nginx/proxy.conf;
+        include /config/nginx/resolver.conf;
+        set $upstream_app {{ vaultwarden_bvd.proxy_host }};
+        set $upstream_port {{ vaultwarden_bvd.proxy_port }};
+        set $upstream_proto {{ vaultwarden_bvd.scheme }} ;
+        proxy_pass $upstream_proto://$upstream_app:$upstream_port;
+
+    }
+
+    location ~ (/vaultwarden)?/admin {
+        include /config/nginx/proxy.conf;
+        include /config/nginx/resolver.conf;
+        set $upstream_app {{ vaultwarden_bvd.proxy_host }};
+        set $upstream_port {{ vaultwarden_bvd.proxy_port }};
+        set $upstream_proto {{ vaultwarden_bvd.scheme }} ;
+        proxy_pass $upstream_proto://$upstream_app:$upstream_port;
+
+    }
+
+    location ~ (/vaultwarden)?/notifications/hub {
+        include /config/nginx/proxy.conf;
+        include /config/nginx/resolver.conf;
+        set $upstream_app {{ vaultwarden_bvd.proxy_host }};
+        set $upstream_port 3012;
+        set $upstream_proto {{ vaultwarden_bvd.scheme }} ;
+        proxy_pass $upstream_proto://$upstream_app:$upstream_port;
+
+    }
+
+    location ~ (/vaultwarden)?/notifications/hub/negotiate {
+        include /config/nginx/proxy.conf;
+        include /config/nginx/resolver.conf;
+        set $upstream_app {{ vaultwarden_bvd.proxy_host }};
+        set $upstream_port {{ vaultwarden_bvd.proxy_port }};
+        set $upstream_proto {{ vaultwarden_bvd.scheme }} ;
+        proxy_pass $upstream_proto://$upstream_app:$upstream_port;
+
+    }
+}
+

@@ -1,0 +1,25 @@
+---
+
+- hosts: gateway
+  become: true
+  gather_facts: yes
+
+  handlers:
+    - name: Import global handlers
+      ansible.builtin.import_tasks: handlers/main.yml
+
+  roles:
+    - role: system
+    - role: geerlingguy.pip
+    - role: geerlingguy.docker
+      tags:
+        - docker
+    - role: wireguard
+    - role: prometheus.prometheus.node_exporter
+    - role: geerlingguy.security
+      tags:
+        - security
+    - role: docker
+    - role: swag
+    - role: ufw
+

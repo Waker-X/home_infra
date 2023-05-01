@@ -1,0 +1,37 @@
+version: "3"
+
+services:
+{% if "uptime_kuma" in services %}
+  uptime-kuma:
+    image: louislam/uptime-kuma:1
+    container_name: uptime-kuma
+    volumes:
+      - '{{ docker_dir }}/kuma/data:/app/data'
+    ports:
+      - {{ uptime_kuma.port | default('3001') }}:3001
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+{% endif %}
+{% if "swag" in services %}
+  swag:
+    image: lscr.io/linuxserver/swag
+    container_name: swag
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ={{ timezone }}
+      - URL={{ swag.url }}
+      - SUBDOMAINS=wildcard
+      - VALIDATION=dns
+      - DNSPLUGIN=cloudflare
+    volumes:
+      - '{{ docker_dir }}/swag:/config'
+    ports:
+      - 443:443
+      - 80:80
+      - 8080:8080
+    restart: unless-stopped
+{% endif %}

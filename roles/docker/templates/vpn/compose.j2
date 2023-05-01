@@ -1,0 +1,43 @@
+version: "3"
+
+services:
+{% if 'adguard' in services %}
+  adguardhome:
+    image: adguard/adguardhome
+    container_name: adguardhome
+    ports:
+      - 53:53/tcp
+      - 53:53/udp
+      - 443:443/tcp
+      - 3000:3000/tcp
+      - 80:80/tcp
+    volumes:
+    - {{ docker_dir }}/adguard/work:/opt/adguardhome/work
+    - {{ docker_dir }}/adguard/conf:/opt/adguardhome/conf
+{% endif %}
+{% if 'prometheus' in services %}
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: unless-stopped
+    volumes:
+      - "{{ docker_dir }}/prometheus:/etc/prometheus"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    ports:
+      - "{{ prometheus.port | default('9090') }}:9090"
+{% endif %}
+{% if 'grafana' in services %}
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    restart: unless-stopped
+    volumes:
+      - "{{ docker_dir }}/grafana:/var/lib/grafana"
+    ports:
+      - "{{ grafana.port | default('3000') }}:3000"
+{% endif %}

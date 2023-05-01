@@ -1,0 +1,30 @@
+---
+
+- name: Install UFW firewall
+  ansible.builtin.apt:
+    name: ufw
+
+- name: Reset ALL rules
+  community.general.ufw:
+    state: reset
+
+- name: Set default policy to deny
+  community.general.ufw:
+    default: deny
+
+- name: Setting allowed ports
+  community.general.ufw:
+    rule: allow
+    port: '{{ item.port }}'
+    proto: '{{ item.proto }}'
+  with_items: '{{ ufw.allow }}'
+
+- name: Allow all access from RFC1918 networks to this host
+  community.general.ufw:
+    rule: allow
+    src: '{{ item.src }}'
+  with_items: '{{ ufw.from }}'
+
+- name: Enabled UFW firewall
+  community.general.ufw:
+    state: enabled

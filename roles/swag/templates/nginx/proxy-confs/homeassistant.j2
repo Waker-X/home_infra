@@ -1,0 +1,33 @@
+server {
+    listen {{ homeassistant.port }} ssl http2 ;
+
+    server_name {{ homeassistant.domain }}.*;
+
+    access_log /config/log/nginx/homeassistant_access.log upstream_time;
+
+    include /config/nginx/ssl.conf;
+
+    client_max_body_size 0;
+
+    location / {
+
+        include /config/nginx/proxy.conf;
+        include /config/nginx/resolver.conf;
+        set $upstream_app {{ homeassistant.proxy_host }};
+        set $upstream_port {{ homeassistant.proxy_port }};
+        set $upstream_proto {{ homeassistant.scheme }};
+        proxy_pass $upstream_proto://$upstream_app:$upstream_port;
+
+    }
+
+    location ~ ^/(api|local|media)/ {
+        include /config/nginx/proxy.conf;
+        include /config/nginx/resolver.conf;
+        set $upstream_app {{ homeassistant.proxy_host }};
+        set $upstream_port {{ homeassistant.proxy_port }};
+        set $upstream_proto {{ homeassistant.scheme }};
+        proxy_pass $upstream_proto://$upstream_app:$upstream_port;
+    }
+}
+
+

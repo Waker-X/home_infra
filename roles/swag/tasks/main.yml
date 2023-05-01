@@ -1,0 +1,34 @@
+---
+
+- name: "Create SWAG directories"
+  file: 
+    path: "{{ item }}"
+    state: directory
+  loop:
+    - "{{ docker_dir }}/swag/nginx/site-confs"
+    - "{{ docker_dir }}/swag/nginx/proxy-confs"
+    - "{{ docker_dir }}/swag/dns-conf"
+- block:
+  - name: "[SWAG] copy nginx.conf"
+    ansible.builtin.template:
+      src: "templates/nginx/nginx.j2"
+      dest: "{{ docker_dir }}/swag/nginx/nginx.conf"
+
+  - name: "[SWAG] copy site.conf"
+    ansible.builtin.template:
+      src: "templates/nginx/site-confs/default.j2"
+      dest: "{{ docker_dir }}/swag/nginx/site-confs/default.conf"
+
+  - name: "[SWAG] copy proxy.conf"
+    ansible.builtin.template:
+      src: "templates/nginx/proxy-confs/{{ item }}.j2"
+      dest: "{{ docker_dir }}/swag/nginx/proxy-confs/{{ item }}.subdomain.conf"
+    loop: "{{ swag.nginx.templates }}"
+
+  - name: "[SWAG] copy clouflare.ini"
+    ansible.builtin.template:
+      src: "templates/dns/cloudflare.j2"
+      dest: "{{ docker_dir }}/swag/dns-conf/cloudflare.ini"
+  notify: Restart docker-compose
+
+...

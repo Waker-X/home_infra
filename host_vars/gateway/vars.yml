@@ -1,0 +1,37 @@
+---
+#
+# SWAG
+#
+swag:
+  url: "mydomain.ru" # Your DNS name
+  cloudflare:
+    enabled: true
+    email: "myemail@gmail.com" # Cloudflate email
+    token: "mytoken" # Cloudflare token
+  nginx:
+    templates:
+      - homeassistant
+      - jellyfin
+      - nextcloud
+      - vaultwarden_kav
+      - vaultwarden
+#
+# Wireguard
+#
+wireguard_port: "61677" 
+wireguard_endpoint: "" # Your external gateway ip
+wireguard_ubuntu_update_cache: "false"
+wireguard_addresses:
+  - "10.77.77.1/24"
+wireguard_allowed_ips: "0.0.0.0/0"
+wireguard_postup:
+  - iptables -A FORWARD -i ens3 -o wg0 -j ACCEPT; iptables -A FORWARD -i wg0 -j ACCEPT; iptables -t nat -A POSTROUTING -o ens3 -j MASQUERADE
+wireguard_postdown:
+  - iptables -D FORWARD -i ens3 -o wg0 -j ACCEPT; iptables -D FORWARD -i wg0 -j ACCEPT; iptables -t nat -D POSTROUTING -o ens3 -j MASQUERADE
+wireguard_unmanaged_peers:
+  mikrotik:
+    public_key: "HdvZFkA4J1wm0LT1vaBHjVZHLl9zNlq3x+qJILhDwDw="
+    allowed_ips: "10.77.77.2/32, 192.168.100.0/24, 10.66.66.0/24"
+  vbaranov_pc:
+    public_key: "/0K2PcSec0AjMirjaA9c6uV2PPe1QNt6uH3lLTv5gy8="
+    allowed_ips: "10.77.77.3/32"

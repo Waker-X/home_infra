@@ -1,0 +1,151 @@
+---
+
+pip_install_packages:
+  - docker
+  - docker-compose
+#
+# UFW settings
+#
+ufw:
+  allow:
+  - port: '{{ security_ssh_port }}' # SSH port
+    proto: 'tcp'
+  - port: '{{ wireguard_port }}'
+    proto: 'udp'
+  - port: 80 # SWAG Let's Encrypt
+    proto: 'tcp'
+  - port: '{{ nextcloud.port }}'
+    proto: 'tcp'
+  - port: '{{ jellyfin.port }}'
+    proto: 'tcp'
+  - port: '{{ vaultwarden_bvd.port }}'
+    proto: 'tcp'
+  - port: '{{ vaultwarden_kav.port }}'
+    proto: 'tcp'
+  from: # Allow all access from RFC1918 networks to this host
+  - src: '10.0.0.0/8'
+  - src: '172.16.0.0/12'
+  - src: '192.168.0.0/16'
+#
+# Docker services
+#
+services:
+  - qbittorrent
+  - nextcloud
+  - jellyfin  
+  - uptime_kuma
+  - swag
+  - heimdall
+  - vault_bvd
+  - vault_kav
+  - adguard
+  - homeassistant
+  - portainer
+  - caadvisor
+  - duplicati
+  - grafana
+  - prometheus
+#
+# Services settings
+#
+homeassistant:
+  domain: "homeassistant"
+  port: 443
+  scheme: 'http'
+  proxy_host: '192.168.100.104'
+  proxy_port: '8123'
+
+nextcloud:
+  domain: 'nextcloud'
+  port: 443
+  scheme: 'http'
+  proxy_host: '192.168.100.104'
+  proxy_port: '80'
+
+vaultwarden_bvd:
+  domain: 'vaultwarden'
+  scheme: 'http'
+  proxy_host: '192.168.100.104'
+  proxy_port: '81'
+  port: 443
+
+vaultwarden_kav:
+  scheme: 'http'
+  proxy_host: '192.168.100.104'
+  proxy_port: '82'
+  domain: 'vaultwarden-kav'
+  port: 443
+
+jellyfin:
+  scheme: 'http'
+  domain: "jellyfin"
+  proxy_host: '192.168.100.104'
+  proxy_port: 8096 
+  port: 443
+
+qbittorrent:
+  port: 8090
+
+portainer:
+  port: 9000
+
+caadvisor:
+  port: 8082
+
+duplicati:
+  port: 8200
+
+heimdall:
+  port: 8081
+
+uptime_kuma:
+  port: 3001
+
+zigbee2mqtt:
+  port: 8080
+
+mosquitto:
+  port: 1883
+
+prometheus:
+  port: 9090
+
+grafana:
+  port: 9443
+#
+# System
+#
+username: 'vbaranov'
+shell: '/usr/bin/fish'
+security_sudoers_passwordless: ['{{ username }}']
+security_ssh_port: 2020
+timezone: 'Europe/Moscow'
+password: "mypassword" # username password
+ssh_public_key: |
+  ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDCORMRHSZl7AejD1gsVQMrO5A6tCrHr+AgUWLwOl7z8UuAHv/32geRwYkDemnpT22bUq8jQMIzHLh1L0PTIR1KOZ31/0nE+SA3p6u7QW2QDWxJOWU5Fj1F04pzS6arafOkhs526lhMfmEAyzLK3Jib/Z/2nR1ym7Es/rudGYkPsX9V3gsuCyI+jv3eXD9EmfzFnOo9hoj6VjEdNilt7CcC8q5KwOYgwR2ckUV1w6iTKM7jbwPYVpHZ5hbV+UmjO0aE9O4V6KpJRg4YVwVAnEUjjsNJGQkaDGtg7nxRi/x+ijdRpgBlOgRVX4Hg82Uac958bIlbDvGPjyT0wwzGb4uAfSZGPYA8kOlxQf7P7giAFL6dcDDICEtZ/2692MhaQbocuB0+nQlSbiua5loUtnSWe5xIQBFeAGh/fFMUSQS5Ad3KaN+qoEwCCPHgAx7scmoo1l/GK9Mn4LQz7WRSBjvj79FxViFx3wv8ADM2WKzWDO3ZsjKsY/3+/SVIwjohKiU= vbaranov@DESKTOP-N8F45Q5
+#
+# Packages
+#
+extra_packages:
+  - fish
+  - iperf3
+  - speedtest-cli
+  - htop
+  - stow
+  - git
+  - neofetch
+  - neovim
+  - tmux
+  - mosh
+  - rsync
+  - lm-sensors
+  - iotop
+  - ncdu
+  - openresolv
+  - qrencode
+  - dnsutils
+#
+# Docker
+#
+docker_compose_dir: '/opt/docker/compose'
+docker_dir: '/opt/docker/data'

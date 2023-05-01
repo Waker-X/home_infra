@@ -1,0 +1,24 @@
+server {
+    listen {{ nextcloud.port }} ssl http2 ;
+
+    server_name {{ nextcloud.domain }}.*;
+
+    access_log /config/log/nginx/nextcloud_access.log upstream_time;
+
+    include /config/nginx/ssl.conf;
+
+    client_max_body_size 0;
+
+    location / {
+        include /config/nginx/proxy.conf;
+        include /config/nginx/resolver.conf;
+        set $upstream_app {{ nextcloud.proxy_host }};
+        set $upstream_port {{ nextcloud.proxy_port }};
+        set $upstream_proto {{ nextcloud.scheme }};
+        proxy_pass $upstream_proto://$upstream_app:$upstream_port;
+
+        proxy_hide_header X-Frame-Options;
+        proxy_max_temp_file_size 2048m;
+    }
+}
+

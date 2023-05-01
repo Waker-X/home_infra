@@ -1,0 +1,6 @@
+---
+- name: Disabled systemd-resolved service
+  ansible.builtin.systemd:
+    name: systemd-resolved
+    state: stopped
+    enabled: false

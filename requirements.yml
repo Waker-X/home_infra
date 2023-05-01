@@ -1,0 +1,10 @@
+---
+roles:
+  - geerlingguy.pip
+  - geerlingguy.docker
+  - geerlingguy.security
+
+collections:
+  - ansible.posix
+  - prometheus.prometheus
+...

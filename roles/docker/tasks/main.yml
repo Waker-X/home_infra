@@ -1,0 +1,21 @@
+---
+
+- name: "Make sure that the docker folders exists"
+  ansible.builtin.file:
+    path: "{{ item }}"
+    owner: "{{ username }}"
+    group: "{{ username }}"
+    state: directory
+  loop:
+    - "{{ docker_compose_dir }}"
+    - "{{ docker_dir }}"
+
+- include_tasks: vpn.yml
+  when: inventory_hostname == 'vpn'
+
+- name: "Copy the compose file"
+  template: 
+    src: "templates/{{ inventory_hostname }}/compose.j2"
+    dest: "{{ docker_compose_dir }}/docker-compose.yaml"
+  notify: Restart docker-compose
+

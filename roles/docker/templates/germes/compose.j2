@@ -1,0 +1,185 @@
+version: '3.5'
+
+services:
+{% if 'nextcloud' in services %}
+  nextcloud:
+    container_name: nextcloud
+    image: nextcloud:apache
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_PASSWORD={{ apps.nextcloud.postgres.password }}
+      - POSTGRES_DB={{ apps.nextcloud.postgres.db }}
+      - POSTGRES_USER={{ apps.nextcloud.postgres.username }}
+      - NEXTCLOUD_TRUSTED_DOMAINS={{ apps.nextcloud.domain }}
+    ports:
+      - {{ apps.nextcloud.web.port }}:80
+    restart: unless-stopped
+    depends_on:
+      - db
+    volumes:
+      - type: tmpfs
+        target: /tmp
+      - {{ docker_dir }}/nextcloud:/var/www/html
+    command: bash -c "apt update && apt install ffmpeg -y && apache2-foreground"
+  db:
+    container_name: postgres
+    image: postgres:alpine
+    environment:
+      - POSTGRES_PASSWORD={{ apps.nextcloud.postgres.password }}
+      - POSTGRES_DB={{ apps.nextcloud.postgres.db }}
+      - POSTGRES_USER={{ apps.nextcloud.postgres.username }}
+    restart: unless-stopped
+    volumes:
+      - {{ docker_dir }}/nextcloud/postgres:/var/lib/postgresql/data
+    expose:
+      - 5432
+  cron:
+    container_name: cron
+    image: nextcloud:apache
+    restart: always
+    volumes:
+      - {{ docker_dir }}/nextcloud:/var/www/html
+    entrypoint: /cron.sh
+    depends_on:
+      - db
+{% endif %}
+{% if 'jellyfin' in services %}
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:latest
+    container_name: jellyfin
+    group_add:
+      - "122"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ={{ timezone }}
+    volumes:
+      - {{ docker_dir }}/jellyfin:/config
+      - {{ docker_dir }}/jellyfin/tvseries:/data/tvshows
+      - {{ docker_dir }}/jellyfin/movies:/data/movies
+    ports:
+      - {{ jellyfin.proxy_port | default('8096') }}:8096
+    restart: unless-stopped
+{% endif %}
+{% if 'qbittorrent' in services %}
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ={{ timezone }}
+      - WEBUI_PORT=8090
+    volumes:
+      - {{ docker_dir }}/qbittorrent/config:/config
+      - {{ docker_dir }}/jellyfin/movies:/downloads
+    ports:
+      - {{ qbittorrent.port }}:8090
+      - 6881:6881
+      - 6881:6881/udp
+    restart: unless-stopped
+{% endif %}
+{% if 'heimdall' in services %}
+  heimdall:
+    image: lscr.io/linuxserver/heimdall:latest
+    container_name: heimdall
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ={{ timezone }}
+    volumes:
+      - '{{ docker_dir }}/heimdall:/config'
+    ports:
+      - {{ heimdall.port | default('8081') }}:80
+    restart: unless-stopped
+{% endif %}
+{% if 'vault_bvd' in services %}
+  vault_bvd:
+    image: vaultwarden/server:latest
+    container_name: vault_bvd
+    restart: always
+    environment:
+      WEBSOCKET_ENABLED: "true"
+    ports:
+       - {{ vaultwarden_bvd.proxy_port | default('81') }}:80
+    volumes:
+      - '{{ docker_dir }}/vault_bvd:/data'
+{% endif %}
+{% if 'vault_kav' in services %}
+  vault_kav:
+    image: vaultwarden/server:latest
+    container_name: vault_kav
+    restart: always
+    environment:
+      WEBSOCKET_ENABLED: "true"
+    ports:
+       - '{{ vaultwarden_kav.proxy_port | default('82')}}:80'
+    volumes:
+      - '{{ docker_dir }}/vault_kav:/data'
+{% endif %}
+{% if 'homeassistant' in services %}
+  homeassistant:
+    container_name: homeassistant
+    image: lscr.io/linuxserver/homeassistant:latest
+    volumes:
+      - {{ docker_dir }}/homeassistant:/config
+      - /etc/localtime:/etc/localtime:ro
+    devices:
+      - /dev/ttyUSB0:/dev/ttyUSB0
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ={{ timezone }}
+    depends_on:
+      - mosquitto
+      - zigbee2mqtt
+  mosquitto:
+    container_name: mosquitto
+    image: eclipse-mosquitto:2
+    user: mosquitto
+    volumes:
+      - {{ docker_dir }}/mosquitto:/mosquitto
+    ports:
+      - {{ mosquitto.port | default('1883') }}:1883
+      - 9001:9001
+  zigbee2mqtt:
+    container_name: zigbee2mqtt
+    image: koenkk/zigbee2mqtt
+    restart: unless-stopped
+    volumes:
+      - {{ docker_dir }}/zigbee2mqtt/data:/app/data
+      - /run/udev:/run/udev:ro
+    ports:
+      - {{ zigbee2mqtt.port | default('8080') }}:8080
+    environment:
+      - TZ={{ timezone }}
+    devices:
+      - /dev/ttyUSB0:/dev/ttyACM0
+    depends_on:
+      - mosquitto
+{% endif %}
+{% if 'portainer' in services %}
+  portainer:
+    container_name: portainer
+    image: portainer/portainer-ce:latest
+    ports:
+      - {{ portainer.port | default('9000') }}:9000
+    volumes:
+      - {{ docker_dir }}/portainer:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+{% endif %}
+{% if 'caadvisor' in services %}
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    ports:
+    - {{ caadvisor.port | default('8082') }}:8080
+    volumes:
+    - /:/rootfs:ro
+    - /var/run:/var/run:rw
+    - /sys:/sys:ro
+    - /var/lib/docker/:/var/lib/docker:ro
+{% endif %}
